@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model absensi {
+  id              Int       @id @default(autoincrement())
+  karyawan_id     Int
+  tanggal         DateTime  @db.Date
+  waktu_masuk     DateTime? @db.Timestamp(6)
+  waktu_keluar    DateTime? @db.Timestamp(6)
+  status_absensi  String    @db.VarChar(10)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  karyawan       karyawan   @relation(fields: [karyawan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model departemen {
+  id              Int        @id @default(autoincrement())
+  nama_departemen String     @unique @db.VarChar(255)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  karyawan        karyawan[]
+}
+
+model gaji {
+  id          Int      @id @default(autoincrement())
+  karyawan_id Int
+  bulan       String   @db.VarChar(50)
+  gaji_pokok  Float
+  tunjangan   Float    @default(0)
+  potongan    Float    @default(0)
+  total_gaji  Float
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  karyawan    karyawan @relation(fields: [karyawan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model jabatan {
+  id           Int        @id @default(autoincrement())
+  nama_jabatan String     @unique @db.VarChar(255)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  karyawan     karyawan[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model karyawan {
+  id            Int        @id @default(autoincrement())
+  nama_lengkap  String     @db.VarChar(255)
+  email         String     @unique @db.VarChar(255)
+  nomor_telepon String?     @db.VarChar(20)
+  tanggal_lahir DateTime?   @db.Date
+  alamat        String?
+  tanggal_masuk DateTime   @db.Date
+  departemen_id Int
+  jabatan_id    Int
+  status        String     @db.VarChar(10)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  absensi       absensi[]
+  gaji          gaji[]
+  departemen    departemen @relation(fields: [departemen_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  jabatan       jabatan    @relation(fields: [jabatan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  admin         admin?
+}
+
+model admin {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique @db.VarChar(50)
+  kata_sandi    String   @db.VarChar(255)
+  karyawan_id   Int      @unique
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  karyawan      karyawan @relation(fields: [karyawan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum status {
+  aktif
+  nonaktif
+}
+
+enum status_absensi {
+  hadir
+  izin
+  sakit
+  alpha
+}
